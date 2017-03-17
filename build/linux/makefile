@@ -1,22 +1,19 @@
 NAME 		= irods_search_service
-DIR_SRC = $(DIR_SERVICES_ROOT_SRC)/irods_search/src
-DIR_INCLUDE = $(DIR_SERVICES_ROOT_SRC)/irods_search/include
-CC		= g++
-CXX		= g++
-MAKEDEPEND 	= gcc -MM -MF
+DIR_BUILD :=  $(realpath $(dir $(lastword $(MAKEFILE_LIST))))
+DIR_SRC := $(realpath $(DIR_BUILD)/../../src)
+DIR_INCLUDE :=$(realpath $(DIR_BUILD)/../../include)
 
-BUILD		= debug
-
-
-ifeq ($(DIR_ROOT),)
-export DIR_ROOT = $(realpath $(../..))
+ifeq ($(DIR_BUILD_CONFIG),)
+export DIR_BUILD_CONFIG := $(realpath $(DIR_BUILD)/../../../../build-config/linux)
 endif
 
-ifneq ($(PROPERTIES_SET),1)
-include $(DIR_BUILD_ROOT)/project.properties
-endif
+include $(DIR_BUILD_CONFIG)/project.properties
 
-export DIR_INSTALL=$(DIR_GRASSROOTS_INSTALL)/services
+VPATH := $(DIR_SRC)
+
+BUILD		:= debug
+
+export DIR_INSTALL := $(DIR_GRASSROOTS_INSTALL)/services
 
 VPATH	= \
 	$(DIR_SRC) 
@@ -48,7 +45,7 @@ LDFLAGS += -L$(DIR_JANSSON_LIB) -ljansson -L$(DIR_GRASSROOTS_UTIL_LIB) -l$(GRASS
 	-L$(DIR_GRASSROOTS_IRODS_LIB) -l$(GRASSROOTS_IRODS_LIB_NAME) \
 	-L$(DIR_GRASSROOTS_PARAMS_LIB) -l$(GRASSROOTS_PARAMS_LIB_NAME)	
 
-include $(DIR_BUILD_ROOT)/irods.mk
-include $(DIR_BUILD_ROOT)/generic_makefiles/shared_library.makefile
+-include $(DIR_BUILD_ROOT)/irods.mk
+include $(DIR_BUILD_CONFIG)/generic_makefiles/shared_library.makefile
 
 
