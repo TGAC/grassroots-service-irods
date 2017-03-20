@@ -79,7 +79,7 @@ static Parameter *AddParam (ServiceData *service_data_p, IRodsConnection *connec
 
 static int AddParams (ServiceData *data_p, IRodsConnection *connection_p, ParameterSet *param_set_p, const char *name_s, const char *display_name_s, const char *description_s);
 
-static IRodsSearchServiceData *GetIRodsSearchServiceData (const json_t *config_p);
+static IRodsSearchServiceData *GetIRodsSearchServiceData (UserDetails *user_p);
 
 static void ReleaseIRodsSearchServiceParameters (Service *service_p, ParameterSet *params_p);
 
