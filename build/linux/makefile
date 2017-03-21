@@ -1,4 +1,4 @@
-NAME 		= irods_search_service
+NAME 		:= irods_search_service
 DIR_BUILD :=  $(realpath $(dir $(lastword $(MAKEFILE_LIST))))
 DIR_SRC := $(realpath $(DIR_BUILD)/../../src)
 DIR_INCLUDE :=$(realpath $(DIR_BUILD)/../../include)
@@ -15,11 +15,11 @@ BUILD		:= debug
 
 export DIR_INSTALL := $(DIR_GRASSROOTS_INSTALL)/services
 
-VPATH	= \
+VPATH	:= \
 	$(DIR_SRC) 
 	
 
-INCLUDES = \
+INCLUDES := \
 	-I$(DIR_INCLUDE) \
 	-I$(DIR_GRASSROOTS_UTIL_INC) \
 	-I$(DIR_GRASSROOTS_UTIL_INC)/containers \
@@ -33,7 +33,7 @@ INCLUDES = \
 	-I$(DIR_JANSSON_INC) \
 	-I$(DIR_UUID_INC)
 	
-SRCS 	= \
+SRCS 	:= \
 	irods_search_service.c 	
 	 
 CPPFLAGS += -DIRODS_SEARCH_LIBRARY_EXPORTS 
