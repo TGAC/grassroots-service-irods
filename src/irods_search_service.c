@@ -102,54 +102,65 @@ static IRodsSearchServiceData *GetIRodsSearchServiceData (UserDetails *user_p)
 
 	if (data_p)
 		{
-			IRodsConnection *connection_p = NULL;
-
 			memset (& (data_p -> issd_base_data), 0, sizeof (ServiceData));
 
+			data_p -> issd_connection_p = NULL;
+			data_p -> issd_params_p = NULL;
+		}
 
-			if (user_p)
+	return data_p;
+}
+
+
+static bool ConfigureIRodsSearchServiceData (IRodsSearchServiceData *data_p, UserDetails *user_p)
+{
+	IRodsConnection *connection_p = NULL;
+
+	if (user_p)
+		{
+			connection_p = CreateIRodsConnectionFromJSON (user_p);
+		}
+
+
+	if (!connection_p)
+		{
+			/* if there is a public irods user, use that */
+			const json_t *service_config_p = data_p -> issd_base_data.sd_config_p;
+		}
+
+	if (connection_p)
+		{
+			ParameterSet *params_p = AllocateParameterSet ("iRODS search service parameters", "The parameters used for an iRODS metadata search service");
+
+			if (params_p)
 				{
-					connection_p = CreateIRodsConnectionFromJSON (user_p);
-
-					if (connection_p)
+					if (AddParams (& (data_p -> issd_base_data), connection_p, params_p, "Data objects metadata", NULL, "The metadata tags available for iRODS data objects") >= 0)
 						{
-							ParameterSet *params_p = AllocateParameterSet ("iRODS search service parameters", "The parameters used for an iRODS metadata search service");
+							/*
+							 * Although we'd like to add the column metadata values separately, it seems that for irods 3.3.1 any keys added via imeta
+							 * get added to both the collection and data object keys
+							 */
+							//if (AddParams (connection_p, COL_META_COLL_ATTR_NAME, COL_META_COLL_ATTR_VALUE, params_p, "Collections metadata", NULL, "The metadata tags available for iRODS collections") >= 0)
+							//	{
+							SharedType def;
+							def.st_string_value_s = NULL;
 
-							if (params_p)
+							if (CreateAndAddParameterToParameterSet (NULL, params_p, NULL, PT_KEYWORD, false, S_IRODS_KEYWORD_S, "Search term", "Search for matching metadata values", NULL, def, NULL, NULL, PL_ALL, NULL))
 								{
 
-									if (AddParams (& (data_p -> issd_base_data), connection_p, params_p, "Data objects metadata", NULL, "The metadata tags available for iRODS data objects") >= 0)
-										{
-											/*
-											 * Although we'd like to add the column metadata values separately, it seems that for irods 3.3.1 any keys added via imeta
-											 * get added to both the collection and data object keys
-											 */
-											//if (AddParams (connection_p, COL_META_COLL_ATTR_NAME, COL_META_COLL_ATTR_VALUE, params_p, "Collections metadata", NULL, "The metadata tags available for iRODS collections") >= 0)
-											//	{
-											SharedType def;
-											def.st_string_value_s = NULL;
+									data_p -> issd_connection_p = connection_p;
+									data_p -> issd_params_p = params_p;
 
-											if (CreateAndAddParameterToParameterSet (NULL, params_p, NULL, PT_KEYWORD, false, S_IRODS_KEYWORD_S, "Search term", "Search for matching metadata values", NULL, def, NULL, NULL, PL_ALL, NULL))
-												{
+									return data_p;
+								}
+							//	}
+						}
 
-													data_p -> issd_connection_p = connection_p;
-													data_p -> issd_params_p = params_p;
+					FreeParameterSet (params_p);
+				}		/* if (params_p) */
 
-													return data_p;
-												}
-											//	}
-										}
-
-									FreeParameterSet (params_p);
-								}		/* if (params_p) */
-
-							FreeIRodsConnection (connection_p);
-						}		/* if (connection_p) */
-
-				}		/* if (user_p) */
-
-			FreeMemory (data_p);
-		}		/* if (data_p) */
+			FreeIRodsConnection (connection_p);
+		}		/* if (connection_p) */
 
 	return NULL;
 }
