@@ -151,7 +151,7 @@ static bool ConfigureIRodsSearchServiceData (IRodsSearchServiceData *data_p, Use
 									data_p -> issd_connection_p = connection_p;
 									data_p -> issd_params_p = params_p;
 
-									return data_p;
+									return true;
 								}
 							//	}
 						}
@@ -162,7 +162,7 @@ static bool ConfigureIRodsSearchServiceData (IRodsSearchServiceData *data_p, Use
 			FreeIRodsConnection (connection_p);
 		}		/* if (connection_p) */
 
-	return NULL;
+	return false;
 }
 
 
