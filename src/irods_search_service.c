@@ -212,7 +212,7 @@ ServicesArray *GetServices (UserDetails *user_p)
 								CloseIRodsSearchService,
 								NULL,
 								true,
-								true,
+								SY_SYNCHRONOUS,
 								data_p);
 							
 							* (services_p -> sa_services_pp) = irods_service_p;
