@@ -70,6 +70,7 @@ static ServiceJobSet *RunIRodsSearchService (Service *service_p, ParameterSet *p
 
 static ParameterSet *IsFileForIRodsSearchService (Service *service_p, Resource *resource_p, Handler *handler_p);
 
+static bool ConfigureIRodsSearchServiceData (IRodsSearchServiceData *data_p, UserDetails *user_p);
 
 static bool CloseIRodsSearchService (Service *service_p);
 
@@ -106,6 +107,8 @@ static IRodsSearchServiceData *GetIRodsSearchServiceData (UserDetails *user_p)
 
 			data_p -> issd_connection_p = NULL;
 			data_p -> issd_params_p = NULL;
+
+			ConfigureIRodsSearchServiceData (data_p, user_p);
 		}
 
 	return data_p;
@@ -115,17 +118,45 @@ static IRodsSearchServiceData *GetIRodsSearchServiceData (UserDetails *user_p)
 static bool ConfigureIRodsSearchServiceData (IRodsSearchServiceData *data_p, UserDetails *user_p)
 {
 	IRodsConnection *connection_p = NULL;
+	UserAuthentication *auth_p = NULL;
 
 	if (user_p)
 		{
-			connection_p = CreateIRodsConnectionFromJSON (user_p);
+			connection_p = CreateIRodsConnectionFromUserDetails (user_p);
 		}
-
-
-	if (!connection_p)
+	else
 		{
 			/* if there is a public irods user, use that */
 			const json_t *service_config_p = data_p -> issd_base_data.sd_config_p;
+			json_t *credentials_p = json_object_get (service_config_p, CREDENTIALS_S);
+
+			if (credentials_p)
+				{
+					json_t *irods_credentials_p = json_object_get (credentials_p, "irods");
+
+					if (irods_credentials_p)
+						{
+							const char *username_s = GetJSONString (irods_credentials_p, CREDENTIALS_USERNAME_S);
+
+							if (username_s)
+								{
+									const char *password_s = GetJSONString (irods_credentials_p, CREDENTIALS_PASSWORD_S);
+
+									if (password_s)
+										{
+											auth_p = AllocateUserAuthentication (PROTOCOL_IRODS_S, username_s, password_s, NULL);
+
+											if (auth_p)
+												{
+													connection_p = CreateIRodsConnection (auth_p);
+													FreeUserAuthentication (auth_p);
+												}
+										}
+
+								}
+
+						}
+				}
 		}
 
 	if (connection_p)
@@ -147,7 +178,6 @@ static bool ConfigureIRodsSearchServiceData (IRodsSearchServiceData *data_p, Use
 
 							if (CreateAndAddParameterToParameterSet (NULL, params_p, NULL, PT_KEYWORD, false, S_IRODS_KEYWORD_S, "Search term", "Search for matching metadata values", NULL, def, NULL, NULL, PL_ALL, NULL))
 								{
-
 									data_p -> issd_connection_p = connection_p;
 									data_p -> issd_params_p = params_p;
 
