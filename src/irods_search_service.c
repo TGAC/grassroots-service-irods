@@ -107,8 +107,6 @@ static IRodsSearchServiceData *GetIRodsSearchServiceData (UserDetails *user_p)
 
 			data_p -> issd_connection_p = NULL;
 			data_p -> issd_params_p = NULL;
-
-			ConfigureIRodsSearchServiceData (data_p, user_p);
 		}
 
 	return data_p;
@@ -128,35 +126,16 @@ static bool ConfigureIRodsSearchServiceData (IRodsSearchServiceData *data_p, Use
 		{
 			/* if there is a public irods user, use that */
 			const json_t *service_config_p = data_p -> issd_base_data.sd_config_p;
-			json_t *credentials_p = json_object_get (service_config_p, CREDENTIALS_S);
 
-			if (credentials_p)
+			auth_p = GetUserAuthenticationForSystemFromJSON (service_config_p, PROTOCOL_IRODS_S);
+
+			if (auth_p)
 				{
-					json_t *irods_credentials_p = json_object_get (credentials_p, "irods");
+					connection_p = CreateIRodsConnection (auth_p);
 
-					if (irods_credentials_p)
-						{
-							const char *username_s = GetJSONString (irods_credentials_p, CREDENTIALS_USERNAME_S);
-
-							if (username_s)
-								{
-									const char *password_s = GetJSONString (irods_credentials_p, CREDENTIALS_PASSWORD_S);
-
-									if (password_s)
-										{
-											auth_p = AllocateUserAuthentication (PROTOCOL_IRODS_S, username_s, password_s, NULL);
-
-											if (auth_p)
-												{
-													connection_p = CreateIRodsConnection (auth_p);
-													FreeUserAuthentication (auth_p);
-												}
-										}
-
-								}
-
-						}
+					FreeUserAuthentication (auth_p);
 				}
+
 		}
 
 	if (connection_p)
@@ -227,7 +206,7 @@ ServicesArray *GetServices (UserDetails *user_p)
 
 			if (services_p)
 				{
-					ServiceData *data_p = (ServiceData *) GetIRodsSearchServiceData (user_p);
+					IRodsSearchServiceData *data_p = (IRodsSearchServiceData *) GetIRodsSearchServiceData (user_p);
 					
 					if (data_p)
 						{
@@ -243,8 +222,11 @@ ServicesArray *GetServices (UserDetails *user_p)
 								NULL,
 								true,
 								SY_SYNCHRONOUS,
-								data_p);
+								& (data_p -> issd_base_data));
 							
+
+							ConfigureIRodsSearchServiceData (data_p, user_p);
+
 							* (services_p -> sa_services_pp) = irods_service_p;
 
 							return services_p;
