@@ -504,7 +504,7 @@ static Parameter *AddParam (ServiceData *service_data_p, IRodsConnection *connec
 	Parameter *param_p = NULL;
 
 	/*
-	 * Get the attibute values
+	 * Get the attribute values
 	 */
 	QueryResults *results_p = GetAllMetadataDataAttributeValues (connection_p, name_s);
 
@@ -551,19 +551,13 @@ static Parameter *AddParam (ServiceData *service_data_p, IRodsConnection *connec
 										{
 											ParameterOption *first_option_p = ((ParameterOptionNode *) options_p -> ll_head_p) -> pon_option_p;
 
-											param_p = AllocateParameter (service_data_p, PT_KEYWORD, false, name_s, display_name_s, description_s, options_p, first_option_p -> po_value, NULL, NULL, PL_ALL, NULL);
+											//def.st_string_value_s = first_option_p -> po_value.st_string_value_s;
+
+											param_p = EasyCreateAndAddParameterToParameterSet (service_data_p, param_set_p, group_p, PT_KEYWORD, name_s, display_name_s, description_s, first_option_p -> po_value, PL_ALL);
 
 											if (param_p)
 												{
 													added_options_flag = true;
-
-													if (!AddParameterToParameterSet (param_set_p, param_p))
-														{
-															FreeParameter (param_p);
-															param_p = NULL;
-															success_flag = false;
-														}
-
 												}		/* if (param_p) */
 
 										}		/* if (CreateAndAddParameterOptionToParameter (param_p, def, NULL)) */
