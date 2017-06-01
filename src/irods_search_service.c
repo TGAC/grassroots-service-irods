@@ -586,13 +586,13 @@ static Parameter *AddParam (ServiceData *service_data_p, IRodsConnection *connec
 
 static const char *GetIRodsSearchServiceName (Service *service_p)
 {
-	return "iRods search service";
+	return "iRODS search service";
 }
 
 
 static const char *GetIRodsSearchServiceDesciption (Service *service_p)
 {
-	return "A service to search the metadata within iRods";
+	return "A service to search the metadata within iRODS";
 }
 
 
