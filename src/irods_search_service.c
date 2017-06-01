@@ -551,8 +551,6 @@ static Parameter *AddParam (ServiceData *service_data_p, IRodsConnection *connec
 										{
 											ParameterOption *first_option_p = ((ParameterOptionNode *) options_p -> ll_head_p) -> pon_option_p;
 
-											//def.st_string_value_s = first_option_p -> po_value.st_string_value_s;
-
 											param_p = EasyCreateAndAddParameterToParameterSet (service_data_p, param_set_p, group_p, PT_KEYWORD, name_s, display_name_s, description_s, first_option_p -> po_value, PL_ALL);
 
 											if (param_p)
