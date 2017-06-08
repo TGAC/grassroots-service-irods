@@ -649,7 +649,7 @@ static ServiceJobSet *RunIRodsSearchService (Service *service_p, ParameterSet *p
 					ServiceJob *job_p = GetServiceJobFromServiceJobSet (service_p -> se_jobs_p, 0);
 					SharedType def;
 
-					job_p -> sj_status = OS_FAILED;
+					SetServiceJobStatus (job_p, OS_FAILED);
 
 					/* is it a keyword search? */
 					if ((GetParameterValueFromParameterSet (param_set_p, S_IRODS_KEYWORD_S, &def, true)) && (!IsStringEmpty (def.st_string_value_s)))
@@ -699,7 +699,7 @@ static ServiceJobSet *RunIRodsSearchService (Service *service_p, ParameterSet *p
 								{
 									QueryResults *results_p = DoIrodsMetaSearch (search_p, data_p);
 
-									job_p -> sj_status = OS_FAILED;
+									SetServiceJobStatus (job_p, OS_FAILED);
 
 									if (results_p)
 										{
@@ -712,7 +712,7 @@ static ServiceJobSet *RunIRodsSearchService (Service *service_p, ParameterSet *p
 												{
 													if (ReplaceServiceJobResults (job_p, query_results_json_p))
 														{
-															job_p -> sj_status = OS_SUCCEEDED;
+															SetServiceJobStatus (job_p, OS_SUCCEEDED);
 														}
 												}
 
