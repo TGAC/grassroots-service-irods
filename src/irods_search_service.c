@@ -529,7 +529,7 @@ static Parameter *AddParam (ServiceData *service_data_p, IRodsConnection *connec
 							/* Add all of the values into our options list */
 							while (success_flag && (i > 1))
 								{
-									def.st_string_value_s = CopyToNewString (*value_ss, 0, false);
+									def.st_string_value_s = *value_ss;
 
 									if (CreateAndAddParameterOption (options_p, def, NULL, PT_STRING))
 										{
@@ -551,7 +551,7 @@ static Parameter *AddParam (ServiceData *service_data_p, IRodsConnection *connec
 										{
 											ParameterOption *first_option_p = ((ParameterOptionNode *) options_p -> ll_head_p) -> pon_option_p;
 
-											param_p = EasyCreateAndAddParameterToParameterSet (service_data_p, param_set_p, group_p, PT_KEYWORD, name_s, display_name_s, description_s, first_option_p -> po_value, PL_ALL);
+											param_p = CreateAndAddParameterToParameterSet (service_data_p, param_set_p, group_p, PT_KEYWORD, false, name_s, display_name_s, description_s, options_p, first_option_p -> po_value, & (first_option_p -> po_value), NULL, PL_ALL, NULL);
 
 											if (param_p)
 												{
@@ -559,6 +559,8 @@ static Parameter *AddParam (ServiceData *service_data_p, IRodsConnection *connec
 												}		/* if (param_p) */
 
 										}		/* if (CreateAndAddParameterOptionToParameter (param_p, def, NULL)) */
+
+									FreeCopiedString (def.st_string_value_s);
 
 								}		/* if (success_flag) */
 
