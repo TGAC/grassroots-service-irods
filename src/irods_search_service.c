@@ -413,7 +413,11 @@ static OperationStatus DoKeywordSearch (const char *keyword_s, ServiceJob *job_p
 								}		/* if (keys_pp) */
 
 						}		/* if (store_p -> ht_size > 0) */
-
+					else
+						{
+							/* no hits found */
+							result = OS_SUCCEEDED;
+						}
 				}		/* if (search_p) */
 
 
