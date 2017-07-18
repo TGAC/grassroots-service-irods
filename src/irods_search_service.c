@@ -457,7 +457,7 @@ static int AddParams (ServiceData *data_p, IRodsConnection *connection_p, Parame
 						}
 
 
-					group_p = CreateAndAddParameterGroupToParameterSet (heading_s, NULL, data_p, param_set_p);
+					group_p = CreateAndAddParameterGroupToParameterSet (heading_s, NULL, false, data_p, param_set_p);
 
 
 					for ( ; i > 0; --i, ++ value_ss)
