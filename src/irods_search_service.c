@@ -516,7 +516,7 @@ static Parameter *AddParam (ServiceData *service_data_p, IRodsConnection *connec
 		{
 			if (results_p -> qr_num_results == 1)
 				{
-					LinkedList *options_p = CreateProgramOptionsList ();
+					LinkedList *options_p = CreateParameterOptionsList ();
 
 					if (options_p)
 						{
