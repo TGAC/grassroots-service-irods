@@ -1,4 +1,4 @@
-﻿# iRODS service
+﻿# iRODS service {#irods_search_service}
 
 The iRODS service allows the Grassroots Server to use the functionality provided by [iRODS](https://irods.org).
 Currently it has the ability to perform queries against the iCAT metadata catalogue as well as more general searches search as modification times, *etc.*
@@ -17,15 +17,21 @@ The files to build the iRODS service are in the ```build/<platform>``` directory
 
 If you enter this directory 
 
-```cd build/linux```
+```
+cd build/linux
+```
 
 you can then build the service by typing
 
-```make all```
+```
+make all
+```
 
 and then 
 
-```make install```
+```
+make install
+```
 
 to install the service into the Grassroots system where it will be available for use immediately.
 
