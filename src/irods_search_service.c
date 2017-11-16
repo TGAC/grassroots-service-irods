@@ -96,6 +96,9 @@ static bool AddIdToParameterStore (Parameter *param_p, const char * const key_s,
 static OperationStatus DoKeywordSearch (const char *keyword_s, ServiceJob *job_p, IRodsSearchServiceData *data_p);
 
 
+static ServiceMetadata *GetIRodsServiceMetadata (Service *service_p);
+
+
 
 static IRodsSearchServiceData *GetIRodsSearchServiceData (UserDetails *user_p)
 {
@@ -210,7 +213,7 @@ ServicesArray *GetServices (UserDetails *user_p)
 					
 					if (data_p)
 						{
-							InitialiseService (irods_service_p,
+							if (InitialiseService (irods_service_p,
 								GetIRodsSearchServiceName,
 								GetIRodsSearchServiceDesciption,
 								NULL,
@@ -222,14 +225,16 @@ ServicesArray *GetServices (UserDetails *user_p)
 								NULL,
 								true,
 								SY_SYNCHRONOUS,
-								& (data_p -> issd_base_data));
+								& (data_p -> issd_base_data),
+								GetIRodsServiceMetadata))
+								{
+									ConfigureIRodsSearchServiceData (data_p, user_p);
+
+									* (services_p -> sa_services_pp) = irods_service_p;
+
+									return services_p;
+								}
 							
-
-							ConfigureIRodsSearchServiceData (data_p, user_p);
-
-							* (services_p -> sa_services_pp) = irods_service_p;
-
-							return services_p;
 						}		/* if (data_p) */
 
 					FreeServicesArray (services_p);
@@ -259,6 +264,81 @@ static bool CloseIRodsSearchService (Service *service_p)
 }
 
 
+
+static ServiceMetadata *GetIRodsServiceMetadata (Service *service_p)
+{
+	const char *term_url_s = CONTEXT_PREFIX_EDAM_ONTOLOGY_S "operation_0304";
+	SchemaTerm *category_p = AllocateSchemaTerm (term_url_s, "Metadata retrieval", "This includes documentation, "
+		"general information and other metadata on entities such as databases, database entries and tools.");
+
+	if (category_p)
+		{
+			ServiceMetadata *metadata_p = AllocateServiceMetadata (category_p, NULL);
+
+			if (metadata_p)
+				{
+					SchemaTerm *input_p;
+
+					/* Gene ID */
+					term_url_s = CONTEXT_PREFIX_EDAM_ONTOLOGY_S "data_0968";
+					input_p = AllocateSchemaTerm (term_url_s, "Keyword", "Keyword(s) or phrase(s) used (typically) for text-searching purposes. "
+						"Boolean operators (AND, OR and NOT) and wildcard characters may be allowed.");
+
+					if (input_p)
+						{
+							if (AddSchemaTermToServiceMetadataInput (metadata_p, input_p))
+								{
+									SchemaTerm *output_p;
+
+									term_url_s = CONTEXT_PREFIX_SCHEMA_ORG_S "MediaObject";
+									output_p = AllocateSchemaTerm (term_url_s, "Media Object", "A media object, such as an image, video, or audio object embedded in a web page or a downloadable datase");
+
+									if (output_p)
+										{
+											if (AddSchemaTermToServiceMetadataOutput (metadata_p, output_p))
+												{
+													return metadata_p;
+												}		/* if (AddSchemaTermToServiceMetadataOutput (metadata_p, output_p)) */
+											else
+												{
+													PrintErrors (STM_LEVEL_SEVERE, __FILE__, __LINE__, "Failed to add output term %s to service metadata", term_url_s);
+													FreeSchemaTerm (output_p);
+												}
+
+										}		/* if (output_p) */
+									else
+										{
+											PrintErrors (STM_LEVEL_SEVERE, __FILE__, __LINE__, "Failed to allocate output term %s for service metadata", term_url_s);
+										}
+
+								}		/* if (AddSchemaTermToServiceMetadataInput (metadata_p, input_p)) */
+							else
+								{
+									PrintErrors (STM_LEVEL_SEVERE, __FILE__, __LINE__, "Failed to add input term %s to service metadata", term_url_s);
+									FreeSchemaTerm (input_p);
+								}
+
+						}		/* if (input_p) */
+					else
+						{
+							PrintErrors (STM_LEVEL_SEVERE, __FILE__, __LINE__, "Failed to allocate input term %s for service metadata", term_url_s);
+						}
+
+				}		/* if (metadata_p) */
+			else
+				{
+					PrintErrors (STM_LEVEL_SEVERE, __FILE__, __LINE__, "Failed to allocate service metadata");
+				}
+
+
+		}		/* if (category_p) */
+	else
+		{
+			PrintErrors (STM_LEVEL_SEVERE, __FILE__, __LINE__, "Failed to allocate category term %s for service metadata", term_url_s);
+		}
+
+	return NULL;
+}
 
 
 
