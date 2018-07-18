@@ -1,4 +1,4 @@
-﻿# iRODS service {#irods_search_service}
+﻿# iRODS service {#irods_search_service_guide}
 
 The iRODS service allows the Grassroots Server to use the functionality provided by [iRODS](https://irods.org).
 Currently it has the ability to perform queries against the iCAT metadata catalogue as well as more general searches search as modification times, *etc.*
