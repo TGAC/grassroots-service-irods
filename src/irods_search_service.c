@@ -65,6 +65,8 @@ static const char *GetIRodsSearchServiceDesciption (Service *service_p);
 
 static ParameterSet *GetIRodsSearchServiceParameters (Service *service_p, Resource *resource_p, UserDetails *user_p);
 
+static bool GetIRodsSearchServiceParameterTypesForNamedParameters (struct Service *service_p, const char *param_name_s, ParameterType *pt_p);
+
 
 static ServiceJobSet *RunIRodsSearchService (Service *service_p, ParameterSet *param_set_p, UserDetails *user_p, ProvidersStateTable *providers_p);
 
@@ -220,6 +222,7 @@ ServicesArray *GetServices (UserDetails *user_p)
 								RunIRodsSearchService,
 								IsFileForIRodsSearchService,
 								GetIRodsSearchServiceParameters,
+								GetIRodsSearchServiceParameterTypesForNamedParameters,
 								ReleaseIRodsSearchServiceParameters,
 								CloseIRodsSearchService,
 								NULL,
@@ -687,6 +690,21 @@ static ParameterSet *GetIRodsSearchServiceParameters (Service *service_p, Resour
 	IRodsSearchServiceData *data_p = (IRodsSearchServiceData *) (service_p -> se_data_p);
 
 	return data_p -> issd_params_p;
+}
+
+
+static bool GetIRodsSearchServiceParameterTypesForNamedParameters (struct Service *service_p, const char *param_name_s, ParameterType *pt_p)
+{
+	bool success_flag = false;
+	IRodsSearchServiceData *data_p = (IRodsSearchServiceData *) (service_p -> se_data_p);
+	Parameter *param_p = GetParameterFromParameterSetByName (data_p -> issd_params_p, param_name_s);
+
+	if (param_p)
+		{
+			*pt_p = param_p -> pa_type;
+		}
+
+	return success_flag;
 }
 
 
