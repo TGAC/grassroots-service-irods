@@ -160,7 +160,7 @@ static bool ConfigureIRodsSearchServiceData (IRodsSearchServiceData *data_p, Use
 							SharedType def;
 							def.st_string_value_s = NULL;
 
-							if (CreateAndAddParameterToParameterSet (NULL, params_p, NULL, PT_KEYWORD, false, S_IRODS_KEYWORD_S, "Search term", "Search for matching metadata values", NULL, def, NULL, NULL, PL_ALL, NULL))
+							if (EasyCreateAndAddParameterToParameterSet (NULL, params_p, NULL, PT_KEYWORD, S_IRODS_KEYWORD_S, "Search term", "Search for matching metadata values", NULL, def, PL_ALL))
 								{
 									data_p -> issd_connection_p = connection_p;
 									data_p -> issd_params_p = params_p;
