@@ -702,6 +702,7 @@ static bool GetIRodsSearchServiceParameterTypesForNamedParameters (struct Servic
 	if (param_p)
 		{
 			*pt_p = param_p -> pa_type;
+			success_flag = true;
 		}
 
 	return success_flag;
