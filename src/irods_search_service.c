@@ -229,7 +229,8 @@ ServicesArray *GetServices (UserDetails *user_p)
 								true,
 								SY_SYNCHRONOUS,
 								& (data_p -> issd_base_data),
-								GetIRodsServiceMetadata))
+								GetIRodsServiceMetadata,
+								NULL))
 								{
 									ConfigureIRodsSearchServiceData (data_p, user_p);
 
