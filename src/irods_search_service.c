@@ -574,7 +574,7 @@ static bool AddIdToParameterStore (Parameter *param_p, const char * const key_s,
 
 	if (val_s)
 		{
-			if (AddParameterKeyValuePair (param_p, key_s, val_s))
+			if (AddParameterKeyStringValuePair (param_p, key_s, val_s))
 				{
 					success_flag = true;
 				}
