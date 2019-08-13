@@ -72,7 +72,7 @@ static ServiceJobSet *RunIRodsSearchService (Service *service_p, ParameterSet *p
 
 static ParameterSet *IsFileForIRodsSearchService (Service *service_p, Resource *resource_p, Handler *handler_p);
 
-static bool ConfigureIRodsSearchServiceData (IRodsSearchServiceData *data_p, UserDetails *user_p);
+static bool ConfigureIRodsSearchServiceData (IRodsSearchServiceData *data_p, UserDetails *user_p, GrassrootsServer *grassroots_p);
 
 static bool CloseIRodsSearchService (Service *service_p);
 
@@ -118,7 +118,7 @@ static IRodsSearchServiceData *GetIRodsSearchServiceData (UserDetails *user_p)
 }
 
 
-static bool ConfigureIRodsSearchServiceData (IRodsSearchServiceData *data_p, UserDetails *user_p)
+static bool ConfigureIRodsSearchServiceData (IRodsSearchServiceData *data_p, UserDetails *user_p, GrassrootsServer *grassroots_p)
 {
 	IRodsConnection *connection_p = NULL;
 	UserAuthentication *auth_p = NULL;
@@ -201,7 +201,7 @@ static void FreeIRodsSearchServiceData (IRodsSearchServiceData *data_p)
  * API FUNCTIONS
  */
 
-ServicesArray *GetServices (UserDetails *user_p)
+ServicesArray *GetServices (UserDetails *user_p, GrassrootsServer *grassroots_p)
 {
 	Service *irods_service_p = (Service *) AllocMemory (sizeof (Service));
 
@@ -230,9 +230,10 @@ ServicesArray *GetServices (UserDetails *user_p)
 								SY_SYNCHRONOUS,
 								& (data_p -> issd_base_data),
 								GetIRodsServiceMetadata,
-								NULL))
+								NULL,
+								grassroots_p))
 								{
-									ConfigureIRodsSearchServiceData (data_p, user_p);
+									ConfigureIRodsSearchServiceData (data_p, user_p, grassroots_p);
 
 									* (services_p -> sa_services_pp) = irods_service_p;
 
