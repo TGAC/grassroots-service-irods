@@ -463,7 +463,7 @@ static OperationStatus DoKeywordSearch (const char *keyword_s, ServiceJob *job_p
 
 												}		/* for ( ; i > 0; -- i, ++ key_pp, ++ pair_p) */
 
-											SortStringIntPairsByCount (results_p);
+											SortStringIntPairsByCountDescending (results_p);
 
 											for (i = store_p -> ht_size, key_pp = keys_pp, pair_p = results_p -> sipa_values_p; i > 0; -- i, ++ key_pp, ++ pair_p)
 												{
