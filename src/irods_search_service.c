@@ -35,6 +35,8 @@
 
 #include "parameter_set.h"
 
+#include "string_parameter.h"
+
 
 /*
  * STATIC DATATYPES
@@ -59,13 +61,15 @@ static const char * const S_IRODS_KEYWORD_S = "text";
  * STATIC PROTOTYPES
  */
 
-static const char *GetIRodsSearchServiceName (Service *service_p);
+static const char *GetIRodsSearchServiceName (const Service *service_p);
 
-static const char *GetIRodsSearchServiceDesciption (Service *service_p);
+static const char *GetIRodsSearchServiceDesciption (const Service *service_p);
+
+static const char *GetIRodsSearchAlias (const Service *service_p);
 
 static ParameterSet *GetIRodsSearchServiceParameters (Service *service_p, Resource *resource_p, UserDetails *user_p);
 
-static bool GetIRodsSearchServiceParameterTypesForNamedParameters (struct Service *service_p, const char *param_name_s, ParameterType *pt_p);
+static bool GetIRodsSearchServiceParameterTypesForNamedParameters (const Service *service_p, const char *param_name_s, ParameterType *pt_p);
 
 
 static ServiceJobSet *RunIRodsSearchService (Service *service_p, ParameterSet *param_set_p, UserDetails *user_p, ProvidersStateTable *providers_p);
@@ -77,7 +81,7 @@ static bool ConfigureIRodsSearchServiceData (IRodsSearchServiceData *data_p, Use
 static bool CloseIRodsSearchService (Service *service_p);
 
 
-static Parameter *AddParam (ServiceData *service_data_p, IRodsConnection *connection_p, ParameterSet *param_set_p, ParameterGroup *group_p, const char *name_s, const char *display_name_s, const char *description_s);
+static bool AddParam (ServiceData *service_data_p, IRodsConnection *connection_p, ParameterSet *param_set_p, ParameterGroup *group_p, const char *name_s, const char *display_name_s, const char *description_s);
 
 
 static int AddParams (ServiceData *data_p, IRodsConnection *connection_p, ParameterSet *param_set_p, const char *name_s, const char *display_name_s, const char *description_s);
@@ -157,10 +161,9 @@ static bool ConfigureIRodsSearchServiceData (IRodsSearchServiceData *data_p, Use
 							 */
 							//if (AddParams (connection_p, COL_META_COLL_ATTR_NAME, COL_META_COLL_ATTR_VALUE, params_p, "Collections metadata", NULL, "The metadata tags available for iRODS collections") >= 0)
 							//	{
-							SharedType def;
-							def.st_string_value_s = NULL;
 
-							if (EasyCreateAndAddParameterToParameterSet (NULL, params_p, NULL, PT_KEYWORD, S_IRODS_KEYWORD_S, "Search term", "Search for matching metadata values", def, PL_ALL))
+
+							if (EasyCreateAndAddStringParameterToParameterSet (NULL, params_p, NULL, PT_KEYWORD, S_IRODS_KEYWORD_S, "Search term", "Search for matching metadata values", NULL, PL_ALL))
 								{
 									data_p -> issd_connection_p = connection_p;
 									data_p -> issd_params_p = params_p;
@@ -218,6 +221,7 @@ ServicesArray *GetServices (UserDetails *user_p, GrassrootsServer *grassroots_p)
 							if (InitialiseService (irods_service_p,
 								GetIRodsSearchServiceName,
 								GetIRodsSearchServiceDesciption,
+								GetIRodsSearchAlias,
 								NULL,
 								RunIRodsSearchService,
 								IsFileForIRodsSearchService,
@@ -547,9 +551,7 @@ static int AddParams (ServiceData *data_p, IRodsConnection *connection_p, Parame
 
 					for ( ; i > 0; --i, ++ value_ss)
 						{
-							Parameter *param_p = AddParam (data_p, connection_p, param_set_p, group_p, *value_ss, NULL, display_name_s);
-
-							if (param_p)
+							if (AddParam (data_p, connection_p, param_set_p, group_p, *value_ss, NULL, display_name_s))
 								{
 									++ res;
 								}
@@ -587,85 +589,57 @@ static bool AddIdToParameterStore (Parameter *param_p, const char * const key_s,
 }
 
 
-static Parameter *AddParam (ServiceData *service_data_p, IRodsConnection *connection_p, ParameterSet *param_set_p, ParameterGroup *group_p, const char *name_s, const char *display_name_s, const char *description_s)
+static bool AddParam (ServiceData *service_data_p, IRodsConnection *connection_p, ParameterSet *param_set_p, ParameterGroup *group_p, const char *name_s, const char *display_name_s, const char *description_s)
 {
 	bool success_flag = false;
-	Parameter *param_p = NULL;
+	StringParameter *param_p = (StringParameter *) EasyCreateAndAddStringParameterToParameterSet (service_data_p, param_set_p, group_p, PT_KEYWORD, name_s, display_name_s, description_s, S_UNSET_VALUE_S, PL_ALL);
 
-	/*
-	 * Get the attribute values
-	 */
-	QueryResults *results_p = GetAllMetadataDataAttributeValues (connection_p, name_s);
-
-	if (results_p)
+	if (param_p)
 		{
-			if (results_p -> qr_num_results == 1)
+
+			if (CreateAndAddStringParameterOption (param_p, S_UNSET_VALUE_S, S_UNSET_VALUE_S))
 				{
-					LinkedList *options_p = CreateParameterOptionsList ();
+					/*
+					 * Get the attribute values
+					 */
+					QueryResults *results_p = GetAllMetadataDataAttributeValues (connection_p, name_s);
 
-					if (options_p)
+					if (results_p)
 						{
-							QueryResult *result_p = results_p -> qr_values_p;
-							const int num_opts = (result_p -> qr_num_values) + 1;
-							char **value_ss = result_p -> qr_values_pp;
-							SharedType def;
-							int i = num_opts;
-							bool added_options_flag = false;
-
-							success_flag = true;
-							InitSharedType (&def);
-
-							/* Add all of the values into our options list */
-							while (success_flag && (i > 1))
+							if (results_p -> qr_num_results == 1)
 								{
-									def.st_string_value_s = *value_ss;
+									QueryResult *result_p = results_p -> qr_values_p;
+									const int num_opts = (result_p -> qr_num_values) + 1;
+									char **value_ss = result_p -> qr_values_pp;
+									int i = num_opts;
 
-									if (CreateAndAddParameterOption (options_p, def, NULL, PT_STRING))
+									success_flag = true;
+
+
+									/* Add all of the values into our options list */
+									while (success_flag && (i > 1))
 										{
-											-- i;
-											++ value_ss;
-										}
-									else
-										{
-											success_flag = false;
-										}
-								}		/* while (success_flag && (i > 1)) */
-
-							/* Add the empty option */
-							if (success_flag)
-								{
-									def.st_string_value_s = CopyToNewString (S_UNSET_VALUE_S, 0, false);
-
-									if (CreateAndAddParameterOption (options_p, def, NULL, PT_STRING))
-										{
-											ParameterOption *first_option_p = ((ParameterOptionNode *) options_p -> ll_head_p) -> pon_option_p;
-
-											param_p = CreateAndAddParameterToParameterSet (service_data_p, param_set_p, group_p, PT_KEYWORD, false, name_s, display_name_s, description_s, options_p, first_option_p -> po_value, & (first_option_p -> po_value), NULL, PL_ALL, NULL);
-
-											if (param_p)
+											if (CreateAndAddStringParameterOption (param_p, *value_ss, *value_ss))
 												{
-													added_options_flag = true;
-												}		/* if (param_p) */
+													-- i;
+													++ value_ss;
+												}
+											else
+												{
+													success_flag = false;
+												}
+										}		/* while (success_flag && (i > 1)) */
 
-										}		/* if (CreateAndAddParameterOptionToParameter (param_p, def, NULL)) */
+								}		/* if (results_p -> qr_num_results == 1) */
 
-									FreeCopiedString (def.st_string_value_s);
+							 FreeQueryResults (results_p);
+						}		/* if (results_p) */
 
-								}		/* if (success_flag) */
+				}		/* if (CreateAndAddStringParameterOption (param_p, S_UNSET_VALUE_S, S_UNSET_VALUE_S)) */
 
-							if (!added_options_flag)
-								{
-									FreeLinkedList (options_p);
-								}
+		}		/* if (param_p) */
 
-						}		/* if (options_p) */
-
-				}		/* if (results_p -> qr_num_results == 1) */
-
-			 FreeQueryResults (results_p);
-		}		/* if (results_p) */
-
-	return param_p;
+	return success_flag;
 }
 
 
@@ -675,15 +649,21 @@ static Parameter *AddParam (ServiceData *service_data_p, IRodsConnection *connec
  */
 
 
-static const char *GetIRodsSearchServiceName (Service *service_p)
+static const char *GetIRodsSearchServiceName (const Service *service_p)
 {
 	return "iRODS search service";
 }
 
 
-static const char *GetIRodsSearchServiceDesciption (Service *service_p)
+static const char *GetIRodsSearchServiceDesciption (const Service *service_p)
 {
 	return "A service to search the metadata within iRODS";
+}
+
+
+static const char *GetIRodsSearchAlias (const Service *service_p)
+{
+	return "irods" SERVICE_GROUP_ALIAS_SEPARATOR "search";
 }
 
 
@@ -695,7 +675,7 @@ static ParameterSet *GetIRodsSearchServiceParameters (Service *service_p, Resour
 }
 
 
-static bool GetIRodsSearchServiceParameterTypesForNamedParameters (struct Service *service_p, const char *param_name_s, ParameterType *pt_p)
+static bool GetIRodsSearchServiceParameterTypesForNamedParameters (const Service *service_p, const char *param_name_s, ParameterType *pt_p)
 {
 	bool success_flag = false;
 	IRodsSearchServiceData *data_p = (IRodsSearchServiceData *) (service_p -> se_data_p);
@@ -754,14 +734,15 @@ static ServiceJobSet *RunIRodsSearchService (Service *service_p, ParameterSet *p
 				{
 					IRodsSearchServiceData *data_p = (IRodsSearchServiceData *) (service_p -> se_data_p);
 					ServiceJob *job_p = GetServiceJobFromServiceJobSet (service_p -> se_jobs_p, 0);
-					SharedType def;
+					const char *keyword_s = NULL;
 
 					SetServiceJobStatus (job_p, OS_FAILED);
 
-					/* is it a keyword search? */
-					if ((GetParameterValueFromParameterSet (param_set_p, S_IRODS_KEYWORD_S, &def, true)) && (!IsStringEmpty (def.st_string_value_s)))
+					GetCurrentStringParameterValueFromParameterSet (param_set_p, S_IRODS_KEYWORD_S, &keyword_s);
+
+					if (keyword_s)
 						{
-							OperationStatus status = DoKeywordSearch (def.st_string_value_s, job_p, data_p);
+							OperationStatus status = DoKeywordSearch (keyword_s, job_p, data_p);
 						}
 					else
 						{
@@ -774,25 +755,35 @@ static ServiceJobSet *RunIRodsSearchService (Service *service_p, ParameterSet *p
 								{
 									Parameter *param_p = node_p -> pn_parameter_p;
 
-									if (strcmp (param_p -> pa_name_s, S_IRODS_KEYWORD_S) == 0)
+									if (strcmp (param_p -> pa_name_s, S_IRODS_KEYWORD_S) != 0)
 										{
-											const char *value_s = param_p -> pa_current_value.st_string_value_s;
 
-											if (strcmp (S_UNSET_VALUE_S, value_s) != 0)
+											if (IsStringParameter (param_p))
 												{
-													if (AddMetadataDataAttributeSearchTerm (search_p, clause_s, param_p -> pa_name_s, "=", value_s))
+													const char *value_s = GetStringParameterCurrentValue ((const StringParameter *) param_p);
+
+													if (value_s)
 														{
-															if (clause_s == NULL)
+															if (strcmp (S_UNSET_VALUE_S, value_s) != 0)
 																{
-																	clause_s = "AND";
-																}
-														}
-													else
-														{
-															success_flag = false;
+																	if (AddMetadataDataAttributeSearchTerm (search_p, clause_s, param_p -> pa_name_s, "=", value_s))
+																		{
+																			if (clause_s == NULL)
+																				{
+																					clause_s = "AND";
+																				}
+																		}
+																	else
+																		{
+																			success_flag = false;
+																		}
+
+																}		/* if (strcmp (S_UNSET_VALUE_S, value_s) != 0) */
+
+
 														}
 
-												}		/* if (strcmp (S_UNSET_VALUE_S, value_s) != 0) */
+												}
 
 										}		/* if (param_p -> pa_tag != TAG_IRODS_KEYWORD) */
 
