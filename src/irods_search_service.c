@@ -32,6 +32,7 @@
 #include "string_int_pair.h"
 #include "string_hash_table.h"
 #include "irods_connection.h"
+#include "uuid_util.h"
 
 #include "parameter_set.h"
 
